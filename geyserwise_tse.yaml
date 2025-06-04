@@ -1,45 +1,25 @@
-#copied from smartpad
+#copied from bluedyn
 
 substitutions:
-  # Default name
   name: "geyserwise-tse"
-  # Default friendly name   
   friendly_name: "Geyserwise TSE ESP Home"
-  # Allows ESP device to be automatically linked to an 'Area' in Home Assistant. Typically used for areas such as 'Lounge Room', 'Kitchen' etc  
   room: ""
-  # Appends the mac Address to the device name, set to "false" to disable
   add_mac_suffix: "true"
-  # Description as appears in ESPHome & top of webserver page
   device_description: "Geyserwise TSE ESP Home"
-  # Project Name
-  project_name: "SmartPad.geyserwise-tse"
-  # Projection version denotes the release version of the yaml file, allowing checking of deployed vs latest version
+  project_name: "BlueDyn.geyserwise-tse"
   project_version: "v1.0.0"
-  # Restore the relay (GPO switch) upon reboot to state:
-  # Set the update interval for sensors
   sensor_update_interval: 10s
-  # Define a domain for this device to use. i.e. iot.home.lan (so device will appear as smartpad-em32-smart-plug.local in DNS/DHCP logs)
   dns_domain: ".local"
-  # Set timezone of the smart plug. Useful if the plug is in a location different to the HA server. Can be entered in unix Country/Area format (i.e. "Africa/Johannesburg")
   timezone: ""
-  # Set the duration between the sntp service polling ntp.org servers for an update
   sntp_update_interval: 6h
-  # Network time servers for your region, enter from lowest to highest priority. To use local servers update as per zones or countries at: https://www.ntppool.org/zone/@
   sntp_server_1: "0.pool.ntp.org"
   sntp_server_2: "1.pool.ntp.org"
   sntp_server_3: "2.pool.ntp.org"  
-  # Enables faster network connections, with last connected SSID being connected to and no full scan for SSID being undertaken
   wifi_fast_connect: "false"
-  # Define logging level: NONE, ERROR, WARN, INFO, DEBUG (Default), VERBOSE, VERY_VERBOSE
   log_level: "INFO"
-  # Enable or disable the use of IPv6 networking on the device
   ipv6_enable: "false"
-  #Specify Web Server Versions
   web_server_version: "2"
-  
-########################## End of Substitutions #########################
 
-#Core Configuration
 esphome:
   name: "${name}"
   friendly_name: "${friendly_name}"
@@ -51,54 +31,39 @@ esphome:
     name: "${project_name}"
     version: "${project_version}"
 
-
-#Board Configuration
 esp8266:
   board: esp01_1m
 
-# Disable serial logging
 logger:
   baud_rate: 0
 
 dashboard_import:
-  package_import_url: github://Smartpadza/Device_Configs/geyserwise-tse.yaml
-  import_full_config: false # or true
+  package_import_url: github://bluedyn/configs/geyserwise_tse.yaml
+  import_full_config: false
 
-#prevent rapid changes to a component from being quickly written to the flash and wearing it out
 preferences:
   flash_write_interval: 5min
 
-
-# Enable Home Assistant API
-#Enable Home Assistant API
 api:
-#Enable OTA Updates
 ota:
   - platform: esphome
 
-#Allow MDNS to be disabled
 mdns:
   disabled: false
-#nable Web Server
+
 web_server:
   port: 80
   version: ${web_server_version}
 
-
 network:
   enable_ipv6: ${ipv6_enable}
-#Wifi Configuration
+
 wifi:
-  # This spawns an AP with the device name and mac address with no password.
   ap: {}
-  # Allow rapid re-connection to previously connect WiFi SSID, skipping scan of all SSID
   fast_connect: "${wifi_fast_connect}"
-  # Define dns domain / suffix to add to hostname
   domain: "${dns_domain}"
 
-#Enable Captive Portal Fallback
 captive_portal:
-
 
 uart:
   rx_pin: GPIO03
@@ -221,19 +186,18 @@ button:
     id: device_Reset
     name: "Reset to Factory Default Settings"
     entity_category: diagnostic
-#Device Restart "Soft-Button"
+
   - platform: restart
     name: "Restart"
     id: device_restart
     entity_category: diagnostic
-#Safe Mode "Soft-Button"
+
   - platform: safe_mode
     name: "Safe Mode"
     id: device_safe_mode
     internal: false
     entity_category: config
 
- #Diagnostic Data Sesnors    
 text_sensor:
   - platform: wifi_info
     ip_address:
@@ -252,13 +216,12 @@ text_sensor:
       icon: mdi:network-pos
       entity_category: diagnostic
 
-  #  Creates a sensor showing when the device was last restarted
   - platform: template
     name: 'Last Restart'
     id: device_last_restart
     icon: mdi:clock
     entity_category: diagnostic
-  #  Creates a sensor of the uptime of the device, in formatted days, hours, minutes and seconds
+
   - platform: template
     name: "Uptime"
     id: device_uptime
@@ -285,22 +248,25 @@ text_sensor:
       }
     icon: mdi:clock-start
 
+  - platform: template
+    name: "Firmware Source"
+    id: firmware_source
+    icon: "mdi:code-tags"
+    lambda: |-
+      return {"GitHub: bluedyn/configs"};
+    update_interval: 300s
+
 time:
   - platform: sntp
     id: sntp_time
-  # Define the timezone of the device
     timezone: "${timezone}"
-  # Change sync interval from default 5min to 6 hours (or as set in substitutions)
     update_interval: ${sntp_update_interval}
-  # Set specific sntp servers to use
     servers: 
       - "${sntp_server_1}"
       - "${sntp_server_2}"
       - "${sntp_server_3}"    
-  # Publish the time the device was last restarted
     on_time_sync:
       then:
-        # Update last restart time, but only once.
         - if:
             condition:
               lambda: 'return id(device_last_restart).state == "";'
