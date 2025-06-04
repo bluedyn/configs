@@ -1,0 +1,8 @@
+packages:
+  bluedyn.ota-recovery: github://bluedyn/configs/geyserwise_ota_recovery.yaml
+
+substitutions:
+  name: geyserwise-temp
+  friendly_name: Geyserwise TEMP Recovery
+  ota_password: "your-ota-password"
+  api_key: "your-api-key"
